@@ -1,0 +1,5 @@
+app:
+  name: "location"
+
+jaeger:
+  addr: "jaeger:4317"

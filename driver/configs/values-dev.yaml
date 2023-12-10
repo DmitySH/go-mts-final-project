@@ -1,0 +1,5 @@
+app:
+  name: "driver"
+
+jaeger:
+  addr: "jaeger:4317"
