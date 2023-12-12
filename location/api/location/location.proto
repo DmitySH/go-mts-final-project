@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option go_package = "gitlab.com/hse-mts-go-dashagarov/go-taxi/location/pkg/api/location";
+
+import "google/api/annotations.proto";
+
+package taxi.location;
+
+service Location {
+  rpc GetDrivers(GetDriversRequest) returns (GetDriversResponse) {
+    option (google.api.http) = {
+      get: "/drivers"
+      response_body: "drivers"
+    };
+  }
+
+  rpc UpdateDriverLocation(UpdateDriverLocationRequest) returns (UpdateDriverLocationResponse) {
+    option (google.api.http) = {
+      post: "/driver/{driver_id}/location"
+      body: "*"
+    };
+  }
+}
+
+message GetDriversRequest {
+  double lat = 1;
+  double lng = 2;
+  double radius = 3;
+}
+
+message GetDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+message UpdateDriverLocationRequest {
+  string driver_id = 1;
+  LatLngLiteral location = 2;
+}
+
+message UpdateDriverLocationResponse {}
+
+message Driver {
+  string id = 1;
+  string name = 2;
+  string auto = 3;
+}
+
+message LatLngLiteral {
+  double lat = 1;
+  double lng = 2;
+}

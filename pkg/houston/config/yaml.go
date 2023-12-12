@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/stage"
+	"gopkg.in/yaml.v3"
 	"os"
+	"path"
 )
 
 const (
@@ -40,6 +42,33 @@ func ReadYAML() error {
 	err := viper.ReadInConfig()
 	if err != nil {
 		return fmt.Errorf("can't read in yaml config: %w", err)
+	}
+
+	return nil
+}
+
+func ParseYAML(out any) error {
+	var cfgName string
+	switch {
+	case stage.IsDev():
+		cfgName = devConfigName
+	case stage.IsProd():
+		cfgName = prodConfigName
+	default:
+		return ErrUnknownStage
+	}
+
+	cfgPath := os.Getenv(configPathEnvKey)
+	if cfgPath == "" {
+		cfgPath = defaultConfigPath
+	}
+	data, err := os.ReadFile(fmt.Sprintf("%s.%s", path.Join(cfgPath, cfgName), "yaml"))
+	if err != nil {
+		return fmt.Errorf("can't read config: %w", err)
+	}
+
+	if err = yaml.Unmarshal(data, out); err != nil {
+		return fmt.Errorf("can't unmarshal yaml: %w", err)
 	}
 
 	return nil

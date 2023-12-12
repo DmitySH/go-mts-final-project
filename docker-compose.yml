@@ -10,6 +10,7 @@ services:
       - otel-collector
       - prometheus
     ports:
+      - 8481:84
       - 8081:80
     env_file:
       - driver/dev.env
@@ -25,6 +26,7 @@ services:
       - otel-collector
       - prometheus
     ports:
+      - 8482:84
       - 8082:80
     env_file:
       - location/dev.env

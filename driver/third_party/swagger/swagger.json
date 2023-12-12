@@ -1,0 +1,289 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/driver.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Driver"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/trips": {
+      "get": {
+        "operationId": "Driver_GetTrips",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "$ref": "#/definitions/driverTrip"
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Driver"
+        ]
+      }
+    },
+    "/trips/{trip_id}": {
+      "get": {
+        "operationId": "Driver_GetTripByID",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/driverTrip"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Driver"
+        ]
+      }
+    },
+    "/trips/{trip_id}/accept": {
+      "post": {
+        "operationId": "Driver_AcceptTrip",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/driverAcceptTripResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Driver"
+        ]
+      }
+    },
+    "/trips/{trip_id}/cancel": {
+      "post": {
+        "operationId": "Driver_CancelTrip",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/driverCancelTripResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Driver"
+        ]
+      }
+    },
+    "/trips/{trip_id}/start": {
+      "post": {
+        "operationId": "Driver_StartTrip",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/driverAcceptTripResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Driver"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "driverAcceptTripResponse": {
+      "type": "object"
+    },
+    "driverCancelTripResponse": {
+      "type": "object"
+    },
+    "driverGetTripByIDResponse": {
+      "type": "object",
+      "properties": {
+        "trip": {
+          "$ref": "#/definitions/driverTrip"
+        }
+      }
+    },
+    "driverGetTripsResponse": {
+      "type": "object",
+      "properties": {
+        "trips": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/driverTrip"
+          }
+        }
+      }
+    },
+    "driverMoney": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "currency": {
+          "type": "string"
+        }
+      }
+    },
+    "driverTrip": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "driver_id": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/definitions/taxidriverLatLngLiteral"
+        },
+        "to": {
+          "$ref": "#/definitions/taxidriverLatLngLiteral"
+        },
+        "price": {
+          "$ref": "#/definitions/driverMoney"
+        },
+        "status": {
+          "$ref": "#/definitions/driverTripStatus"
+        }
+      }
+    },
+    "driverTripStatus": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "DRIVER_SEARCH",
+        "DRIVER_FOUND",
+        "ON_POSITION",
+        "STARTED",
+        "ENDED",
+        "CANCELED"
+      ],
+      "default": "UNKNOWN"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "taxidriverLatLngLiteral": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number",
+          "format": "double"
+        },
+        "lng": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

@@ -11,6 +11,8 @@ RUN go mod download
 
 COPY driver/cmd cmd
 COPY driver/internal internal
+COPY driver/api api
+COPY driver/pkg pkg
 
 ENV CGO_ENABLED=0
 RUN go build -o driver ./cmd/driver/main.go
@@ -18,6 +20,8 @@ RUN go build -o driver ./cmd/driver/main.go
 FROM scratch
 
 COPY driver/configs configs
+COPY driver/third_party third_party
+
 COPY --from=builder /app/driver driver
 
 CMD ["./driver"]

@@ -9,27 +9,31 @@ import (
 	"time"
 )
 
-const (
-	gracefulShutdownTimeout = 10 * time.Second
-)
-
 func main() {
-	err := config.ReadYAML()
-
-	if err != nil {
-		log.Fatalln("can't init config:", err)
-	}
-
 	ctx := context.Background()
 
-	a := app.NewApp(runner.NewRunnerV1(
-		config.String("app.name"),
-		config.String("jaeger.addr"),
-	))
+	err := config.ReadYAML()
+	if err != nil {
+		log.Fatalln("can't read config:", err)
+	}
+
+	cfg := new(app.Config)
+	err = config.ParseYAML(cfg)
+	if err != nil {
+		log.Fatalln("can't parse config:", err)
+	}
+
+	a := app.NewApp(
+		cfg,
+		runner.NewRunnerV1(
+			config.String("app.name"),
+			config.String("jaeger.addr"),
+		),
+	)
 
 	runner.Start(ctx,
 		a,
-		runner.WithGracefulShutdown(gracefulShutdownTimeout),
+		runner.WithGracefulShutdown(time.Duration(config.Int("app.graceful_shutdown_timeout_seconds"))*time.Second),
 		runner.WithPanicRecovery(),
 	)
 }

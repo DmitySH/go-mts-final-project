@@ -36,7 +36,7 @@ func NewRunnerV1(appName, jaegerAddr string, opts ...RunnerV1Option) *RunnerV1 {
 		appName:     appName,
 		jaegerAddr:  jaegerAddr,
 		metricsPath: "/metrics",
-		metricsAddr: "127.0.0.1:9000",
+		metricsAddr: ":9000",
 	}
 
 	for _, opt := range opts {

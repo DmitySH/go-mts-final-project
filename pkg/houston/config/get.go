@@ -13,3 +13,7 @@ func String(key string) string {
 
 	return val
 }
+
+func Int(key string) int {
+	return viper.GetInt(key)
+}

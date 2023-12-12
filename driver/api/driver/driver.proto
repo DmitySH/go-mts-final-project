@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+option go_package = "gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver";
+
+import "google/api/annotations.proto";
+
+package taxi.driver;
+
+service Driver {
+  rpc GetTrips(GetTripsRequest) returns (GetTripsResponse) {
+    option (google.api.http) = {
+      get: "/trips"
+      response_body: "trips"
+    };
+  }
+
+  rpc GetTripByID(GetTripByIDRequest) returns (GetTripByIDResponse) {
+    option (google.api.http) = {
+      get: "/trips/{trip_id}"
+      response_body: "trip"
+    };
+  }
+
+  rpc CancelTrip(CancelTripRequest) returns (CancelTripResponse) {
+    option (google.api.http) = {
+      post: "/trips/{trip_id}/cancel"
+    };
+  }
+
+  rpc AcceptTrip(AcceptTripRequest) returns (AcceptTripResponse) {
+    option (google.api.http) = {
+      post: "/trips/{trip_id}/accept"
+    };
+  }
+
+  rpc StartTrip(AcceptTripRequest) returns (AcceptTripResponse) {
+    option (google.api.http) = {
+      post: "/trips/{trip_id}/start"
+    };
+  }
+}
+
+message GetTripsRequest {}
+
+message GetTripsResponse {
+  repeated Trip trips = 1;
+}
+
+message GetTripByIDRequest {
+  string trip_id = 1;
+}
+
+message GetTripByIDResponse {
+  Trip trip = 1;
+}
+
+message CancelTripRequest {
+  string trip_id = 1;
+  string reason = 2;
+}
+
+message CancelTripResponse {}
+
+message AcceptTripRequest {
+  string trip_id = 1;
+}
+
+message AcceptTripResponse {}
+
+message StartTripRequest {
+  string trip_id = 1;
+}
+
+message StartTripResponse {}
+
+enum TripStatus {
+  UNKNOWN = 0;
+  DRIVER_SEARCH = 1;
+  DRIVER_FOUND = 2;
+  ON_POSITION = 3;
+  STARTED = 4;
+  ENDED = 5;
+  CANCELED = 6;
+}
+
+message Trip {
+  string id = 1;
+  string driver_id = 2;
+  LatLngLiteral from = 3;
+  LatLngLiteral to = 4;
+  Money price = 5;
+  TripStatus status = 6;
+}
+
+message LatLngLiteral {
+  double lat = 1;
+  double lng = 2;
+}
+
+message Money {
+  double amount = 1;
+  string currency = 2;
+}
