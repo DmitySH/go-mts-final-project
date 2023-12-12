@@ -14,3 +14,9 @@ http:
 swagger:
   path:
     "third_party/swagger"
+
+postgres:
+  host: "location-postgres"
+  port: "5432"
+  db_name: "location"
+  ssl: "disable"

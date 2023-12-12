@@ -10,9 +10,9 @@ COPY location/go.sum .
 RUN go mod download
 
 COPY location/cmd cmd
-COPY location/internal internal
 COPY location/api api
 COPY location/pkg pkg
+COPY location/internal internal
 
 ENV CGO_ENABLED=0
 RUN go build -o location ./cmd/location/main.go

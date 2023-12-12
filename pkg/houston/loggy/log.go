@@ -53,6 +53,6 @@ func Warnln(args ...any) {
 }
 
 func Fatal(args ...any) {
-	Error(args...)
+	Errorln(args...)
 	os.Exit(1)
 }

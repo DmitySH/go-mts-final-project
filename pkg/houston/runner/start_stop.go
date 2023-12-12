@@ -42,7 +42,7 @@ func Start(ctx context.Context, app RunStopper, opts ...StartOption) {
 		if cfg.recoverPanic {
 			defer func() {
 				if v := recover(); v != nil {
-					loggy.Error("panic in app.Run:", v)
+					loggy.Errorln("panic in app.Run:", v)
 					stop()
 				}
 			}()
@@ -50,7 +50,7 @@ func Start(ctx context.Context, app RunStopper, opts ...StartOption) {
 
 		err := app.Run(ctx)
 		if err != nil {
-			loggy.Error("can't run app:", err)
+			loggy.Fatal("can't run app:", err)
 		}
 	}()
 

@@ -10,9 +10,9 @@ COPY driver/go.sum .
 RUN go mod download
 
 COPY driver/cmd cmd
-COPY driver/internal internal
 COPY driver/api api
 COPY driver/pkg pkg
+COPY driver/internal internal
 
 ENV CGO_ENABLED=0
 RUN go build -o driver ./cmd/driver/main.go

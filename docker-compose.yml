@@ -31,6 +31,19 @@ services:
     env_file:
       - location/dev.env
 
+  location-postgres:
+    image: postgres:16.0
+    container_name: "location-postgres"
+    environment:
+      POSTGRES_DB: "location"
+      POSTGRES_USER: "location-service"
+      POSTGRES_PASSWORD: "w87Pyw0WEsXEuORVFlLRyi"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - location_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5440:5432"
+
   jaeger:
     image: jaegertracing/all-in-one:1.52.0
     container_name: jaeger
@@ -78,3 +91,4 @@ services:
 
 volumes:
   prometheus_data:
+  location_postgres_data:

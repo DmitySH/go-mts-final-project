@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/repository"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/server"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/service"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/pkg/api/location"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/runner"
@@ -14,6 +16,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"net/http"
+	"os"
 	"path"
 )
 
@@ -42,9 +45,25 @@ func (a *App) Run(ctx context.Context) error {
 		return err
 	}
 
+	db, err := repository.NewPostgresDB(repository.PGConfig{
+		Host:     a.cfg.Postgres.Host,
+		Port:     a.cfg.Postgres.Port,
+		Username: os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		DBName:   a.cfg.Postgres.DBName,
+		SSLMode:  a.cfg.Postgres.SSL,
+	})
+	if err != nil {
+		return fmt.Errorf("can't init postgres db: %w", err)
+	}
+	defer db.Close()
+
+	locationRepo := repository.NewLocationRepository(db)
+	locationSvc := service.NewLocationService(locationRepo)
+
 	errCh := make(chan error, 2)
 	go func() {
-		err = a.runGRPCServer()
+		err = a.runGRPCServer(locationSvc)
 		errCh <- fmt.Errorf("can't run grpc server: %w", err)
 	}()
 
@@ -63,8 +82,8 @@ func (a *App) Run(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) runGRPCServer() error {
-	locationServer := server.NewLocationServer()
+func (a *App) runGRPCServer(service *service.LocationService) error {
+	locationServer := server.NewLocationServer(service)
 
 	a.locationServer = locationServer
 	a.locationServer.Register()

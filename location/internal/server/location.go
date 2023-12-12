@@ -2,18 +2,22 @@ package server
 
 import (
 	"context"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/service"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/pkg/api/location"
 	"google.golang.org/grpc"
 )
 
 type LocationServer struct {
 	location.UnimplementedLocationServer
-
 	*grpc.Server
+
+	locationService *service.LocationService
 }
 
-func NewLocationServer() *LocationServer {
-	return &LocationServer{}
+func NewLocationServer(locationService *service.LocationService) *LocationServer {
+	return &LocationServer{
+		locationService: locationService,
+	}
 }
 
 func (l *LocationServer) Register() {
