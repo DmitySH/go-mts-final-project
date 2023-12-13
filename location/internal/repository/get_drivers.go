@@ -11,7 +11,7 @@ func (l *LocationRepository) GetDriversInsideCircle(ctx context.Context, latLon 
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
-	sqlQuery, args, err := l.psql.Select("driver.id, driver.name AS name, auto.name AS auto").
+	sqlQuery, args, err := l.psql.Select("driver.id, driver.name AS name, auto.name AS auto, lat, lng").
 		From(driverTable).
 		Where("(lat - ?) * (lat - ?) + (lng - ?) * (lng - ?) <= ?::DOUBLE PRECISION * ?", latLon.Lat, latLon.Lat, latLon.Lng, latLon.Lng, radius, radius).
 		Join(carTable + " ON auto.id = auto").

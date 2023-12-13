@@ -38,6 +38,8 @@ func DriversToProto(drivers []entity.Driver) []*location.Driver {
 	res := make([]*location.Driver, 0, len(drivers))
 	for _, driver := range drivers {
 		res = append(res, &location.Driver{
+			Lat:  driver.Lat,
+			Lng:  driver.Lng,
 			Id:   driver.Id,
 			Name: driver.Name,
 			Auto: driver.Auto,
