@@ -18,7 +18,9 @@ require (
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
+	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
@@ -27,6 +29,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/prometheus/client_golang v1.17.0 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
@@ -40,6 +43,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.21.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.21.0 // indirect

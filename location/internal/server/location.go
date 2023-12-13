@@ -4,6 +4,7 @@ import (
 	"context"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/service"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/pkg/api/location"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +22,9 @@ func NewLocationServer(locationService *service.LocationService) *LocationServer
 }
 
 func (l *LocationServer) Register() {
-	var opts []grpc.ServerOption
+	opts := []grpc.ServerOption{
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+	}
 	l.Server = grpc.NewServer(opts...)
 	location.RegisterLocationServer(l.Server, l)
 }

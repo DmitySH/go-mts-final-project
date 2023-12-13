@@ -72,7 +72,7 @@ func (a *App) Run(ctx context.Context) error {
 		errCh <- fmt.Errorf("can't run http proxy server: %w", err)
 	}()
 
-	for i := 0; i < len(errCh); i++ {
+	for i := 0; i < cap(errCh); i++ {
 		err = <-errCh
 		if err != nil {
 			return err
