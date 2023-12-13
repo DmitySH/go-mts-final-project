@@ -2,6 +2,7 @@ package tracy
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"runtime"
 )
@@ -14,6 +15,15 @@ func Start(ctx context.Context, opts ...trace.SpanStartOption) (context.Context,
 
 func StartWithName(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	return instance.Start(ctx, spanName, opts...)
+}
+
+func RecordError(ctx context.Context, err error) {
+	span := trace.SpanFromContext(ctx)
+
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
 }
 
 func functionCallerName(depth int) string {
