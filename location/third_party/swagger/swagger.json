@@ -41,11 +41,16 @@
             "type": "string"
           },
           {
-            "name": "location",
+            "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/locationLatLngLiteral"
+              "type": "object",
+              "properties": {
+                "location": {
+                  "$ref": "#/definitions/taxilocationLatLngLiteral"
+                }
+              }
             }
           }
         ],
@@ -116,6 +121,14 @@
         },
         "auto": {
           "type": "string"
+        },
+        "lat": {
+          "type": "number",
+          "format": "double"
+        },
+        "lng": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -128,19 +141,6 @@
             "type": "object",
             "$ref": "#/definitions/locationDriver"
           }
-        }
-      }
-    },
-    "locationLatLngLiteral": {
-      "type": "object",
-      "properties": {
-        "lat": {
-          "type": "number",
-          "format": "double"
-        },
-        "lng": {
-          "type": "number",
-          "format": "double"
         }
       }
     },
@@ -172,6 +172,19 @@
             "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
+        }
+      }
+    },
+    "taxilocationLatLngLiteral": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number",
+          "format": "double"
+        },
+        "lng": {
+          "type": "number",
+          "format": "double"
         }
       }
     }
