@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/notifier"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/repository"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/server"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
@@ -69,7 +70,7 @@ func (a *App) Run(ctx context.Context) error {
 	}()
 
 	go func() {
-		err = a.runHTTPProxy()
+		err = a.runHTTPServer(ctx, driverSvc)
 		errCh <- fmt.Errorf("can't run http proxy server: %w", err)
 	}()
 
@@ -105,7 +106,7 @@ func (a *App) runGRPCServer(service *service.DriverService) error {
 	return nil
 }
 
-func (a *App) runHTTPProxy() error {
+func (a *App) runHTTPServer(ctx context.Context, service *service.DriverService) error {
 	httpAddr := a.cfg.HTTP.Addr
 	gwMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.HTTPBodyMarshaler{
 		Marshaler: &runtime.JSONPb{
@@ -119,13 +120,14 @@ func (a *App) runHTTPProxy() error {
 		},
 	}))
 
-	ctx := context.Background()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	err := driver.RegisterDriverHandlerFromEndpoint(ctx, gwMux, a.cfg.GRPC.Addr, opts)
 	if err != nil {
 		return fmt.Errorf("can't register handler for grpc endpoint: %w", err)
 	}
+
+	wsNotifier := notifier.NewWSNotifier(service)
 
 	httpMux := http.NewServeMux()
 	httpMux.Handle("/", gwMux)
@@ -134,13 +136,15 @@ func (a *App) runHTTPProxy() error {
 	})
 	httpMux.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir(a.cfg.Swagger.Path))))
 
+	httpMux.HandleFunc("/trips", wsNotifier.TripsHandler)
+
 	srv := &http.Server{
 		Addr:    httpAddr,
 		Handler: httpMux,
 	}
 	a.httpProxyServer = srv
 
-	loggy.Infoln("starting http proxy on", httpAddr)
+	loggy.Infoln("starting http server on", httpAddr)
 	if err = a.httpProxyServer.ListenAndServe(); err != nil {
 		return fmt.Errorf("can't serve: %w", err)
 	}

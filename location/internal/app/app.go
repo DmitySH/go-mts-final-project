@@ -71,7 +71,7 @@ func (a *App) Run(ctx context.Context) error {
 	}()
 
 	go func() {
-		err = a.runHTTPProxy()
+		err = a.runHTTPServer(ctx)
 		errCh <- fmt.Errorf("can't run http proxy server: %w", err)
 	}()
 
@@ -107,7 +107,7 @@ func (a *App) runGRPCServer(service *service.LocationService) error {
 	return nil
 }
 
-func (a *App) runHTTPProxy() error {
+func (a *App) runHTTPServer(ctx context.Context) error {
 	httpAddr := a.cfg.HTTP.Addr
 	gwMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.HTTPBodyMarshaler{
 		Marshaler: &runtime.JSONPb{
@@ -121,7 +121,6 @@ func (a *App) runHTTPProxy() error {
 		},
 	}))
 
-	ctx := context.Background()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	err := location.RegisterLocationHandlerFromEndpoint(ctx, gwMux, a.cfg.GRPC.Addr, opts)
@@ -142,7 +141,7 @@ func (a *App) runHTTPProxy() error {
 	}
 	a.httpProxyServer = srv
 
-	loggy.Infoln("starting http proxy on", httpAddr)
+	loggy.Infoln("starting http server on", httpAddr)
 	if err = a.httpProxyServer.ListenAndServe(); err != nil {
 		return fmt.Errorf("can't serve: %w", err)
 	}
