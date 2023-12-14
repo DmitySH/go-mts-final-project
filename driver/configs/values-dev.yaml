@@ -14,3 +14,7 @@ http:
 swagger:
   path:
     "third_party/swagger"
+
+mongo:
+  uri: "mongodb://driver-mongo:27017"
+  auth_source: "admin"

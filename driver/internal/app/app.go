@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/repository"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/server"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/runner"
@@ -14,6 +16,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"net/http"
+	"os"
 	"path"
 )
 
@@ -27,12 +30,15 @@ type App struct {
 
 	driverServer    *server.DriverServer
 	httpProxyServer *http.Server
+
+	isStopping bool
 }
 
 func NewApp(config *Config, runStopperPreset runner.RunStopper) *App {
 	return &App{
 		RunStopper: runStopperPreset,
 		cfg:        config,
+		isStopping: false,
 	}
 }
 
@@ -42,9 +48,23 @@ func (a *App) Run(ctx context.Context) error {
 		return err
 	}
 
+	db, err := repository.NewMongoDB(ctx, repository.MongoConfig{
+		URI:        a.cfg.Mongo.URI,
+		AuthSource: a.cfg.Mongo.AuthSource,
+		Username:   os.Getenv("MONGO_USER"),
+		Password:   os.Getenv("MONGO_PASSWORD"),
+	})
+	if err != nil {
+		return fmt.Errorf("can't init mongo db: %w", err)
+	}
+	defer db.Disconnect(ctx)
+
+	driverRepo := repository.NewDriverRepository(db)
+	driverSvc := service.NewDriverService(driverRepo)
+
 	errCh := make(chan error, 2)
 	go func() {
-		err = a.runGRPCServer()
+		err = a.runGRPCServer(driverSvc)
 		errCh <- fmt.Errorf("can't run grpc server: %w", err)
 	}()
 
@@ -53,9 +73,9 @@ func (a *App) Run(ctx context.Context) error {
 		errCh <- fmt.Errorf("can't run http proxy server: %w", err)
 	}()
 
-	for i := 0; i < len(errCh); i++ {
+	for i := 0; i < cap(errCh); i++ {
 		err = <-errCh
-		if err != nil {
+		if err != nil && !a.isStopping {
 			return err
 		}
 	}
@@ -63,8 +83,8 @@ func (a *App) Run(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) runGRPCServer() error {
-	driverServer := server.NewDriverServer()
+func (a *App) runGRPCServer(service *service.DriverService) error {
+	driverServer := server.NewDriverServer(service)
 
 	a.driverServer = driverServer
 	a.driverServer.Register()
@@ -129,6 +149,8 @@ func (a *App) runHTTPProxy() error {
 }
 
 func (a *App) Stop(ctx context.Context) error {
+	a.isStopping = true
+
 	return multierr.Combine(
 		a.httpProxyServer.Shutdown(ctx),
 		a.driverServer.GracefulStop(ctx),

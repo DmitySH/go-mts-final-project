@@ -2,22 +2,29 @@ package server
 
 import (
 	"context"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
 type DriverServer struct {
 	driver.UnimplementedDriverServer
-
 	*grpc.Server
+
+	driverService *service.DriverService
 }
 
-func NewDriverServer() *DriverServer {
-	return &DriverServer{}
+func NewDriverServer(driverService *service.DriverService) *DriverServer {
+	return &DriverServer{
+		driverService: driverService,
+	}
 }
 
 func (l *DriverServer) Register() {
-	var opts []grpc.ServerOption
+	opts := []grpc.ServerOption{
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+	}
 	l.Server = grpc.NewServer(opts...)
 	driver.RegisterDriverServer(l.Server, l)
 }

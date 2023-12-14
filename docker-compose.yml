@@ -219,6 +219,19 @@ services:
     ports:
       - 9000:9000
 
+  driver-mongo:
+    image: "mongo:latest"
+    container_name: "driver-mongo"
+    restart: on-failure
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: driver-service
+      MONGO_INITDB_ROOT_PASSWORD: YX7iWN1XaFo1POJ
+    volumes:
+      - driver_mongo_data:/data/db
+
 volumes:
   prometheus_data:
   location_postgres_data:
+  driver_mongo_data:

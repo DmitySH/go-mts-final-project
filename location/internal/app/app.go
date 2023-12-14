@@ -30,12 +30,15 @@ type App struct {
 
 	locationServer  *server.LocationServer
 	httpProxyServer *http.Server
+
+	isStopping bool
 }
 
 func NewApp(config *Config, runStopperPreset runner.RunStopper) *App {
 	return &App{
 		RunStopper: runStopperPreset,
 		cfg:        config,
+		isStopping: false,
 	}
 }
 
@@ -74,7 +77,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	for i := 0; i < cap(errCh); i++ {
 		err = <-errCh
-		if err != nil {
+		if err != nil && !a.isStopping {
 			return err
 		}
 	}
@@ -148,6 +151,8 @@ func (a *App) runHTTPProxy() error {
 }
 
 func (a *App) Stop(ctx context.Context) error {
+	a.isStopping = true
+
 	return multierr.Combine(
 		a.httpProxyServer.Shutdown(ctx),
 		a.locationServer.GracefulStop(ctx),
