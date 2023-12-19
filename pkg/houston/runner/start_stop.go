@@ -68,7 +68,7 @@ func exit(ctx context.Context, app RunStopper, gracefulShutdownTimeout time.Dura
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			loggy.Warnln("graceful stop time is out. hard-shutting down app")
 		} else {
-			loggy.Errorln("error during graceful shutdown: %v", err)
+			loggy.Errorln("error during graceful shutdown:", err)
 		}
 	}
 

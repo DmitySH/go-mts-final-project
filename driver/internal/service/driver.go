@@ -1,14 +1,25 @@
 package service
 
+import (
+	"context"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
+)
+
 type DriverRepository interface {
 }
 
-type DriverService struct {
-	repo DriverRepository
+type DriverProducer interface {
+	ProduceMessage(ctx context.Context, msg entity.QMessage) error
 }
 
-func NewDriverService(repo DriverRepository) *DriverService {
+type DriverService struct {
+	repo     DriverRepository
+	producer DriverProducer
+}
+
+func NewDriverService(repo DriverRepository, producer DriverProducer) *DriverService {
 	return &DriverService{
-		repo: repo,
+		repo:     repo,
+		producer: producer,
 	}
 }

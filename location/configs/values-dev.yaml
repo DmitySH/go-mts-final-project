@@ -12,8 +12,7 @@ http:
   addr: ":80"
 
 swagger:
-  path:
-    "third_party/swagger"
+  path: "third_party/swagger"
 
 postgres:
   host: "location-postgres"

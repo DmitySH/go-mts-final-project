@@ -1,6 +1,6 @@
 app:
   name: "location"
-  graceful_shutdown_timeout_seconds: 10
+  graceful_shutdown_timeout_seconds: 15
 
 jaeger:
   addr: "jaeger:4317"
@@ -12,9 +12,17 @@ http:
   addr: ":80"
 
 swagger:
-  path:
-    "third_party/swagger"
+  path: "third_party/swagger"
 
 mongo:
   uri: "mongodb://driver-mongo:27017"
   auth_source: "admin"
+
+kafka:
+  group_id: "driver-service"
+  brokers:
+    - "kafka-1:9092"
+    - "kafka-2:909"
+    - "kafka-3:9092"
+  driver_produce_topic: "driver-out"
+  driver_consume_topic: "driver-in"

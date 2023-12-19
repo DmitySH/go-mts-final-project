@@ -2,9 +2,13 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/consumer"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/handlers"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/notifier"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/producer"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/repository"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/server"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
@@ -29,17 +33,15 @@ type App struct {
 	runner.RunStopper
 	cfg *Config
 
-	driverServer    *server.DriverServer
-	httpProxyServer *http.Server
-
-	isStopping bool
+	driverServer *server.DriverServer
+	httpServer   *http.Server
+	consumer     *consumer.Consumer
 }
 
 func NewApp(config *Config, runStopperPreset runner.RunStopper) *App {
 	return &App{
 		RunStopper: runStopperPreset,
 		cfg:        config,
-		isStopping: false,
 	}
 }
 
@@ -48,6 +50,8 @@ func (a *App) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	defer loggy.Infoln("KEK")
 
 	db, err := repository.NewMongoDB(ctx, repository.MongoConfig{
 		URI:        a.cfg.Mongo.URI,
@@ -60,23 +64,43 @@ func (a *App) Run(ctx context.Context) error {
 	}
 	defer db.Disconnect(ctx)
 
+	driverProducer, closeProducer := producer.NewProducer(producer.KafkaConfig{
+		Brokers: a.cfg.Kafka.Brokers,
+		Topic:   a.cfg.Kafka.DriverProduceTopic,
+	})
+	defer closeProducer()
+
 	driverRepo := repository.NewDriverRepository(db)
-	driverSvc := service.NewDriverService(driverRepo)
+	driverSvc := service.NewDriverService(driverRepo, driverProducer)
+
+	a.consumer = consumer.NewConsumer(consumer.KafkaConfig{
+		GroupID: a.cfg.Kafka.GroupID,
+		Brokers: a.cfg.Kafka.Brokers,
+	},
+		consumer.WithHandler(a.cfg.Kafka.DriverConsumeTopic, handlers.NewTripHandler()),
+	)
+	a.consumer.Run(ctx)
 
 	errCh := make(chan error, 2)
 	go func() {
-		err = a.runGRPCServer(driverSvc)
-		errCh <- fmt.Errorf("can't run grpc server: %w", err)
+		if err = a.runGRPCServer(driverSvc); err != nil {
+			errCh <- fmt.Errorf("can't run grpc server: %w", err)
+		} else {
+			errCh <- nil
+		}
 	}()
 
 	go func() {
 		err = a.runHTTPServer(ctx, driverSvc)
-		errCh <- fmt.Errorf("can't run http proxy server: %w", err)
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- fmt.Errorf("can't run http server: %w", err)
+		} else {
+			errCh <- nil
+		}
 	}()
 
 	for i := 0; i < cap(errCh); i++ {
-		err = <-errCh
-		if err != nil && !a.isStopping {
+		if err = <-errCh; err != nil {
 			return err
 		}
 	}
@@ -142,22 +166,32 @@ func (a *App) runHTTPServer(ctx context.Context, service *service.DriverService)
 		Addr:    httpAddr,
 		Handler: httpMux,
 	}
-	a.httpProxyServer = srv
+	a.httpServer = srv
 
 	loggy.Infoln("starting http server on", httpAddr)
-	if err = a.httpProxyServer.ListenAndServe(); err != nil {
+	if err = a.httpServer.ListenAndServe(); err != nil {
 		return fmt.Errorf("can't serve: %w", err)
 	}
 
 	return nil
 }
 
-func (a *App) Stop(ctx context.Context) error {
-	a.isStopping = true
+func (a *App) runConsumer(ctx context.Context) {
+	driverConsumer := consumer.NewConsumer(consumer.KafkaConfig{
+		GroupID: a.cfg.GroupID,
+		Brokers: a.cfg.Brokers,
+	})
 
-	return multierr.Combine(
-		a.httpProxyServer.Shutdown(ctx),
+	driverConsumer.Run(ctx)
+}
+
+func (a *App) Stop(ctx context.Context) error {
+	err := multierr.Combine(
+		a.consumer.Stop(),
+		a.httpServer.Shutdown(ctx),
 		a.driverServer.GracefulStop(ctx),
 		a.RunStopper.Stop(ctx),
 	)
+
+	return err
 }

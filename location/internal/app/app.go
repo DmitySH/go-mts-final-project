@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/repository"
@@ -66,18 +67,24 @@ func (a *App) Run(ctx context.Context) error {
 
 	errCh := make(chan error, 2)
 	go func() {
-		err = a.runGRPCServer(locationSvc)
-		errCh <- fmt.Errorf("can't run grpc server: %w", err)
+		if err = a.runGRPCServer(locationSvc); err != nil {
+			errCh <- fmt.Errorf("can't run grpc server: %w", err)
+		} else {
+			errCh <- nil
+		}
 	}()
 
 	go func() {
 		err = a.runHTTPServer(ctx)
-		errCh <- fmt.Errorf("can't run http proxy server: %w", err)
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- fmt.Errorf("can't run http server: %w", err)
+		} else {
+			errCh <- nil
+		}
 	}()
 
 	for i := 0; i < cap(errCh); i++ {
-		err = <-errCh
-		if err != nil && !a.isStopping {
+		if err = <-errCh; err != nil {
 			return err
 		}
 	}
