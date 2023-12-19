@@ -42,7 +42,7 @@ func (l *LocationClient) GetDrivers(ctx context.Context, latLng entity.LatLng, r
 		return nil, err
 	}
 
-	res := make([]entity.Driver, len(resp.GetDrivers()))
+	res := make([]entity.Driver, 0, len(resp.GetDrivers()))
 
 	for _, driver := range resp.GetDrivers() {
 		res = append(res, converters.DriverFromProto(driver))

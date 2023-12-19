@@ -10,10 +10,10 @@ type Handler interface {
 	Handle(ctx context.Context, m kafka.Message) error
 }
 
-type ConsumerOption func(c *Consumer)
+type ConsumerOption func(c *KafkaConsumer)
 
 func WithHandler(topic string, handler Handler) ConsumerOption {
-	return func(c *Consumer) {
+	return func(c *KafkaConsumer) {
 		r := kafka.NewReader(kafka.ReaderConfig{
 			Brokers: c.cfg.Brokers,
 			GroupID: c.cfg.GroupID,

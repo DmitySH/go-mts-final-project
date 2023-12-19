@@ -4,7 +4,6 @@ import (
 	context "context"
 	"github.com/google/uuid"
 	entity "gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
-	gomock "go.uber.org/mock/gomock"
 )
 
 // MockOfferingClient is a mock of OfferingClient interface.
@@ -12,7 +11,7 @@ type MockOfferingClient struct {
 }
 
 // NewMockOfferingClient creates a new mock instance.
-func NewMockOfferingClient(ctrl *gomock.Controller) *MockOfferingClient {
+func NewMockOfferingClient() *MockOfferingClient {
 	mock := &MockOfferingClient{}
 	return mock
 }

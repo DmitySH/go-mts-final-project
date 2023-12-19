@@ -10,7 +10,7 @@ import (
 	"io"
 )
 
-type Consumer struct {
+type KafkaConsumer struct {
 	cfg KafkaConfig
 
 	topicHandlers map[string]*topicHandler
@@ -24,8 +24,8 @@ type topicHandler struct {
 	stopCtx context.Context
 }
 
-func NewConsumer(cfg KafkaConfig, opts ...ConsumerOption) *Consumer {
-	c := &Consumer{
+func NewConsumer(cfg KafkaConfig, opts ...ConsumerOption) *KafkaConsumer {
+	c := &KafkaConsumer{
 		cfg:           cfg,
 		topicHandlers: make(map[string]*topicHandler),
 	}
@@ -37,14 +37,14 @@ func NewConsumer(cfg KafkaConfig, opts ...ConsumerOption) *Consumer {
 	return c
 }
 
-func (c *Consumer) Run(ctx context.Context) {
+func (c *KafkaConsumer) Run(ctx context.Context) {
 	for topic, th := range c.topicHandlers {
 		loggy.Infoln("starting consuming messages for topic", topic)
 		go c.readMessages(ctx, th)
 	}
 }
 
-func (c *Consumer) readMessages(ctx context.Context, th *topicHandler) {
+func (c *KafkaConsumer) readMessages(ctx context.Context, th *topicHandler) {
 	for {
 		m, err := th.reader.ReadMessage(ctx)
 		if errors.Is(err, io.EOF) {
@@ -64,7 +64,7 @@ func (c *Consumer) readMessages(ctx context.Context, th *topicHandler) {
 	}
 }
 
-func (c *Consumer) Stop() error {
+func (c *KafkaConsumer) Stop() error {
 	var err error
 	for topic, th := range c.topicHandlers {
 		err = th.reader.Close()

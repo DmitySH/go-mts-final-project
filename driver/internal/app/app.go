@@ -16,7 +16,7 @@ import (
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/runner"
-	"go.uber.org/mock/gomock"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"testing"
 )
 
 const (
@@ -38,8 +37,10 @@ type App struct {
 
 	driverServer *server.DriverServer
 	httpServer   *http.Server
-	consumer     *consumer.Consumer
 
+	consumer       *consumer.KafkaConsumer
+	producer       *producer.KafkaProducer
+	db             *mongo.Client
 	locationClient *clients.LocationClient
 }
 
@@ -65,15 +66,16 @@ func (a *App) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("can't init mongo db: %w", err)
 	}
-	defer db.Disconnect(ctx)
+	a.db = db
 
-	driverProducer, closeProducer := producer.NewProducer(producer.KafkaConfig{
+	driverProducer := producer.NewProducer(producer.KafkaConfig{
 		Brokers: a.cfg.Kafka.Brokers,
 		Topic:   a.cfg.Kafka.DriverProduceTopic,
 	})
-	defer closeProducer()
+	a.producer = driverProducer
 
 	driverRepo := repository.NewDriverRepository(db)
+	wsNotifier := notifier.NewWSNotifier()
 
 	locationClient, err := clients.NewLocationClient(a.cfg.Location.Addr)
 	if err != nil {
@@ -81,11 +83,11 @@ func (a *App) Run(ctx context.Context) error {
 	}
 	a.locationClient = locationClient
 
-	offeringClient := clients.NewMockOfferingClient(gomock.NewController(&testing.T{}))
+	offeringClient := clients.NewMockOfferingClient()
 
 	driverSvc := service.NewDriverService(service.DriverConfig{
 		OfferRadius: a.cfg.Driver.OfferRadius,
-	}, driverRepo, driverProducer, a.locationClient, offeringClient)
+	}, driverRepo, driverProducer, wsNotifier, a.locationClient, offeringClient)
 
 	a.consumer = consumer.NewConsumer(consumer.KafkaConfig{
 		GroupID: a.cfg.Kafka.GroupID,
@@ -105,7 +107,7 @@ func (a *App) Run(ctx context.Context) error {
 	}()
 
 	go func() {
-		err = a.runHTTPServer(ctx, driverSvc)
+		err = a.runHTTPServer(ctx, wsNotifier)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- fmt.Errorf("can't run http server: %w", err)
 		} else {
@@ -144,7 +146,7 @@ func (a *App) runGRPCServer(service *service.DriverService) error {
 	return nil
 }
 
-func (a *App) runHTTPServer(ctx context.Context, service *service.DriverService) error {
+func (a *App) runHTTPServer(ctx context.Context, wsNotifier *notifier.WSNotifier) error {
 	httpAddr := a.cfg.HTTP.Addr
 	gwMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.HTTPBodyMarshaler{
 		Marshaler: &runtime.JSONPb{
@@ -164,8 +166,6 @@ func (a *App) runHTTPServer(ctx context.Context, service *service.DriverService)
 	if err != nil {
 		return fmt.Errorf("can't register handler for grpc endpoint: %w", err)
 	}
-
-	wsNotifier := notifier.NewWSNotifier(service)
 
 	httpMux := http.NewServeMux()
 	httpMux.Handle("/", gwMux)
@@ -204,6 +204,8 @@ func (a *App) Stop(ctx context.Context) error {
 		a.consumer.Stop(),
 		a.httpServer.Shutdown(ctx),
 		a.driverServer.GracefulStop(ctx),
+		a.db.Disconnect(ctx),
+		a.producer.Close(),
 		a.locationClient.Disconnect(),
 		a.RunStopper.Stop(ctx),
 	)

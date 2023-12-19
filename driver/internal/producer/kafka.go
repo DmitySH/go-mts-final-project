@@ -15,14 +15,14 @@ type KafkaConfig struct {
 	Topic   string
 }
 
-func NewProducer(cfg KafkaConfig) (*KafkaProducer, func() error) {
+func NewProducer(cfg KafkaConfig) *KafkaProducer {
 	w := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.Topic,
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	return &KafkaProducer{w: w}, w.Close
+	return &KafkaProducer{w: w}
 }
 
 func (p *KafkaProducer) ProduceMessage(ctx context.Context, msg entity.QMessage) error {
@@ -34,4 +34,8 @@ func (p *KafkaProducer) ProduceMessage(ctx context.Context, msg entity.QMessage)
 	)
 
 	return err
+}
+
+func (p *KafkaProducer) Close() error {
+	return p.w.Close()
 }

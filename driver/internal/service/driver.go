@@ -24,22 +24,28 @@ type OfferingClient interface {
 	GetOfferByID(ctx context.Context, offerID string) (entity.Offer, error)
 }
 
+type DriverNotifier interface {
+	NotifyDriver(ctx context.Context, driverID string, offer entity.Offer) error
+}
+
 type DriverService struct {
 	cfg DriverConfig
 
 	repo     DriverRepository
 	producer DriverProducer
+	notifier DriverNotifier
 
 	locationClient LocationClient
 	offeringClient OfferingClient
 }
 
-func NewDriverService(cfg DriverConfig, repo DriverRepository, producer DriverProducer,
+func NewDriverService(cfg DriverConfig, repo DriverRepository, producer DriverProducer, notifier DriverNotifier,
 	locationClient LocationClient, offeringClient OfferingClient) *DriverService {
 	return &DriverService{
 		cfg:            cfg,
 		repo:           repo,
 		producer:       producer,
+		notifier:       notifier,
 		locationClient: locationClient,
 		offeringClient: offeringClient,
 	}
