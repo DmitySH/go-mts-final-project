@@ -21,3 +21,7 @@ create-migration:
 .PHONY: migrate
 migrate:
 	cd ./migrations && ../bin/goose postgres "user=postgres password=postgres host=localhost port=5432 dbname=postgres sslmode=disable" up
+
+.PHONY: mocks
+mocks:
+	mockgen -source=internal/service/driver.go -destination=internal/clients/offering.go -package=clients -exclude_interfaces=DriverProducer,DriverRepository,LocationClient

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/clients"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/consumer"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/handlers"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/notifier"
@@ -15,6 +16,7 @@ import (
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/runner"
+	"go.uber.org/mock/gomock"
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -23,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"testing"
 )
 
 const (
@@ -36,6 +39,8 @@ type App struct {
 	driverServer *server.DriverServer
 	httpServer   *http.Server
 	consumer     *consumer.Consumer
+
+	locationClient *clients.LocationClient
 }
 
 func NewApp(config *Config, runStopperPreset runner.RunStopper) *App {
@@ -50,8 +55,6 @@ func (a *App) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	defer loggy.Infoln("KEK")
 
 	db, err := repository.NewMongoDB(ctx, repository.MongoConfig{
 		URI:        a.cfg.Mongo.URI,
@@ -71,13 +74,24 @@ func (a *App) Run(ctx context.Context) error {
 	defer closeProducer()
 
 	driverRepo := repository.NewDriverRepository(db)
-	driverSvc := service.NewDriverService(driverRepo, driverProducer)
+
+	locationClient, err := clients.NewLocationClient(a.cfg.Location.Addr)
+	if err != nil {
+		return fmt.Errorf("can't connect to location service: %w", err)
+	}
+	a.locationClient = locationClient
+
+	offeringClient := clients.NewMockOfferingClient(gomock.NewController(&testing.T{}))
+
+	driverSvc := service.NewDriverService(service.DriverConfig{
+		OfferRadius: a.cfg.Driver.OfferRadius,
+	}, driverRepo, driverProducer, a.locationClient, offeringClient)
 
 	a.consumer = consumer.NewConsumer(consumer.KafkaConfig{
 		GroupID: a.cfg.Kafka.GroupID,
 		Brokers: a.cfg.Kafka.Brokers,
 	},
-		consumer.WithHandler(a.cfg.Kafka.DriverConsumeTopic, handlers.NewTripHandler()),
+		consumer.WithHandler(a.cfg.Kafka.DriverConsumeTopic, handlers.NewTripHandler(driverSvc)),
 	)
 	a.consumer.Run(ctx)
 
@@ -190,6 +204,7 @@ func (a *App) Stop(ctx context.Context) error {
 		a.consumer.Stop(),
 		a.httpServer.Shutdown(ctx),
 		a.driverServer.GracefulStop(ctx),
+		a.locationClient.Disconnect(),
 		a.RunStopper.Stop(ctx),
 	)
 

@@ -5,6 +5,7 @@ go 1.21.4
 replace gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston => ../pkg/houston
 
 require (
+	github.com/google/uuid v1.4.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0
 	github.com/segmentio/kafka-go v0.4.47
@@ -12,6 +13,7 @@ require (
 	go.mongodb.org/mongo-driver v1.13.1
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.46.1
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1
+	go.uber.org/mock v0.3.0
 	go.uber.org/multierr v1.11.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17
 	google.golang.org/grpc v1.59.0

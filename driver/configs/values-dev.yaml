@@ -1,5 +1,5 @@
 app:
-  name: "location"
+  name: "driver"
   graceful_shutdown_timeout_seconds: 15
 
 jaeger:
@@ -26,3 +26,9 @@ kafka:
     - "kafka-3:9092"
   driver_produce_topic: "driver-out"
   driver_consume_topic: "driver-in"
+
+driver:
+  offer_radius: 3.154
+
+location:
+  addr: "location:84"

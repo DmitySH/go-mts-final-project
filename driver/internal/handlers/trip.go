@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/segmentio/kafka-go"
-	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
 	"time"
 )
 
@@ -33,10 +33,13 @@ type CreatedTripEvent struct {
 }
 
 type TripHandler struct {
+	driverService *service.DriverService
 }
 
-func NewTripHandler() *TripHandler {
-	return &TripHandler{}
+func NewTripHandler(driverService *service.DriverService) *TripHandler {
+	return &TripHandler{
+		driverService: driverService,
+	}
 }
 
 func (c *TripHandler) Handle(ctx context.Context, m kafka.Message) error {
@@ -64,10 +67,13 @@ func (c *TripHandler) handleCreatedTripEvent(ctx context.Context, m kafka.Messag
 
 	err := json.Unmarshal(m.Value, &event)
 	if err != nil {
-		return err
+		return fmt.Errorf("can't unmarshal event: %w", err)
 	}
 
-	loggy.Infoln(event)
+	err = c.driverService.OfferTripForDrivers(ctx, event.Data.OfferId)
+	if err != nil {
+		return fmt.Errorf("can't offer trip: %w", err)
+	}
 
 	return nil
 }
