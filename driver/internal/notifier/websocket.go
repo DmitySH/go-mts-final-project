@@ -1,10 +1,17 @@
 package notifier
 
 import (
+	"context"
+	"fmt"
 	"github.com/gorilla/websocket"
-	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
 	"net/http"
+	"sync"
+)
+
+const (
+	driverIDHeader = "user-id"
 )
 
 var upgrader = websocket.Upgrader{
@@ -14,28 +21,64 @@ var upgrader = websocket.Upgrader{
 }
 
 type WSNotifier struct {
-	driverService *service.DriverService
+	clients   map[string]*websocket.Conn
+	clientsMu sync.Mutex
 }
 
-func NewWSNotifier(driverService *service.DriverService) *WSNotifier {
-	return &WSNotifier{driverService: driverService}
+func NewWSNotifier() *WSNotifier {
+	return &WSNotifier{
+		clients:   make(map[string]*websocket.Conn),
+		clientsMu: sync.Mutex{},
+	}
 }
 
 func (w *WSNotifier) TripsHandler(rw http.ResponseWriter, r *http.Request) {
-	connection, err := upgrader.Upgrade(rw, r, nil)
-	if err != nil {
-		loggy.Warnln("can't upgrade connection to ws:", err)
+	driverID := r.Header.Get(driverIDHeader)
+	if driverID == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, "user-id header is no set")
 		return
 	}
-	defer connection.Close()
+
+	conn, err := upgrader.Upgrade(rw, r, nil)
+	if err != nil {
+		loggy.Errorln("can't upgrade connection to ws:", err)
+		return
+	}
+	defer conn.Close()
+
+	w.clientsMu.Lock()
+	w.clients[driverID] = conn
+	w.clientsMu.Unlock()
+
+	defer func() {
+		w.clientsMu.Lock()
+		delete(w.clients, driverID)
+		w.clientsMu.Unlock()
+	}()
 
 	for {
-		mt, msg, err := connection.ReadMessage()
+		mt, msg, err := conn.ReadMessage()
 		if err != nil || mt == websocket.CloseMessage {
 			break
 		}
-
-		loggy.Infoln(string(msg))
-
+		loggy.Infoln(msg)
 	}
+}
+
+func (w *WSNotifier) NotifyDriver(_ context.Context, driverID string, offer entity.Offer) error {
+	w.clientsMu.Lock()
+	driverClient, ok := w.clients[driverID]
+	w.clientsMu.Unlock()
+
+	if !ok {
+		return nil
+	}
+
+	err := driverClient.WriteJSON(offer)
+	if err != nil {
+		return fmt.Errorf("can't write to client: %w", err)
+	}
+
+	return nil
 }

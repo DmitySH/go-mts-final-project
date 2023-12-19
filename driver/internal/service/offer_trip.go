@@ -7,19 +7,21 @@ import (
 )
 
 func (d *DriverService) OfferTripForDrivers(ctx context.Context, offerID string) error {
-	trip, err := d.offeringClient.GetOfferByID(ctx, offerID)
+	offer, err := d.offeringClient.GetOfferByID(ctx, offerID)
 	if err != nil {
 		return fmt.Errorf("can't get trip: %w", err)
 	}
 
-	drivers, err := d.locationClient.GetDrivers(ctx, trip.From, d.cfg.OfferRadius)
+	drivers, err := d.locationClient.GetDrivers(ctx, offer.From, d.cfg.OfferRadius)
 	if err != nil {
 		return fmt.Errorf("can't get drivers: %w", err)
 	}
 
 	for _, driver := range drivers {
-		// TODO: Offer trip via websocket
-		loggy.Infoln(driver)
+		err = d.notifier.NotifyDriver(ctx, driver.Id, offer)
+		if err != nil {
+			loggy.Errorln("can't notify driver:", err)
+		}
 	}
 
 	return nil
