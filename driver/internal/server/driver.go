@@ -21,19 +21,19 @@ func NewDriverServer(driverService *service.DriverService) *DriverServer {
 	}
 }
 
-func (l *DriverServer) Register() {
+func (d *DriverServer) Register() {
 	opts := []grpc.ServerOption{
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	}
-	l.Server = grpc.NewServer(opts...)
-	driver.RegisterDriverServer(l.Server, l)
+	d.Server = grpc.NewServer(opts...)
+	driver.RegisterDriverServer(d.Server, d)
 }
 
-func (l *DriverServer) GracefulStop(ctx context.Context) error {
+func (d *DriverServer) GracefulStop(ctx context.Context) error {
 	done := make(chan struct{}, 1)
 
 	go func() {
-		l.Server.GracefulStop()
+		d.Server.GracefulStop()
 		done <- struct{}{}
 		close(done)
 	}()
