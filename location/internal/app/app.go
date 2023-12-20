@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/jmoiron/sqlx"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/repository"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/server"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/location/internal/service"
@@ -32,14 +33,13 @@ type App struct {
 	locationServer  *server.LocationServer
 	httpProxyServer *http.Server
 
-	isStopping bool
+	db *sqlx.DB
 }
 
 func NewApp(config *Config, runStopperPreset runner.RunStopper) *App {
 	return &App{
 		RunStopper: runStopperPreset,
 		cfg:        config,
-		isStopping: false,
 	}
 }
 
@@ -60,7 +60,7 @@ func (a *App) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("can't init postgres db: %w", err)
 	}
-	defer db.Close()
+	a.db = db
 
 	locationRepo := repository.NewLocationRepository(db)
 	locationSvc := service.NewLocationService(locationRepo)
@@ -157,11 +157,10 @@ func (a *App) runHTTPServer(ctx context.Context) error {
 }
 
 func (a *App) Stop(ctx context.Context) error {
-	a.isStopping = true
-
 	return multierr.Combine(
 		a.httpProxyServer.Shutdown(ctx),
 		a.locationServer.GracefulStop(ctx),
+		a.db.Close(),
 		a.RunStopper.Stop(ctx),
 	)
 }
