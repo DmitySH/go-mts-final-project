@@ -2,7 +2,9 @@ package clients
 
 import (
 	context "context"
+
 	"github.com/google/uuid"
+
 	entity "gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
 )
 
@@ -20,8 +22,8 @@ func NewMockOfferingClient() *MockOfferingClient {
 func (m *MockOfferingClient) GetOfferByID(ctx context.Context, offerID string) (entity.Offer, error) {
 	return entity.Offer{
 		Id:       offerID,
-		From:     entity.LatLng{1, 1},
-		To:       entity.LatLng{32, 32},
+		From:     entity.LatLng{Lat: 1, Lng: 1},
+		To:       entity.LatLng{Lat: 32, Lng: 32},
 		ClientId: uuid.New().String(),
 		Price: entity.Money{
 			Amount:   2300.03,

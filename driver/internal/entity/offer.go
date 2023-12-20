@@ -9,6 +9,6 @@ type Offer struct {
 }
 
 type Money struct {
-	Amount   float64 `json:"amount"`
-	Currency string  `json:"currency"`
+	Amount   float64 `json:"amount" bson:"amount"`
+	Currency string  `json:"currency" bson:"currency"`
 }
