@@ -48,6 +48,8 @@ func (d *DriverRepository) GetTrips(ctx context.Context) ([]entity.Trip, error) 
 		return nil, createCursorError(ctx, err)
 	}
 
+	defer cursor.Close(ctx)
+
 	var trips []entity.Trip
 	if err := cursor.All(ctx, trips); err != nil {
 		return nil, executeError(ctx, err)
@@ -64,6 +66,8 @@ func (d *DriverRepository) GetTripById(ctx context.Context, tripId string) (enti
 	if err != nil {
 		return entity.Trip{}, createCursorError(ctx, err)
 	}
+
+	defer cursor.Close(ctx)
 
 	var trips []entity.Trip
 	if err := cursor.All(ctx, trips); err != nil {
@@ -112,6 +116,8 @@ func (d *DriverRepository) CreateTrip(ctx context.Context, trip entity.Trip) err
 	if err := cursor.All(ctx, trips); err != nil {
 		return executeError(ctx, err)
 	}
+
+	defer cursor.Close(ctx)
 
 	if len(trips) != 0 {
 		return errors.New("trip already exist")
