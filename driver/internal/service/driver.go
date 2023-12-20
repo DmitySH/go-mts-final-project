@@ -13,7 +13,7 @@ type DriverRepository interface {
 }
 
 type DriverProducer interface {
-	ProduceMessage(ctx context.Context, msg entity.QMessage) error
+	ProduceJSONMessage(ctx context.Context, data any) error
 }
 
 type LocationClient interface {

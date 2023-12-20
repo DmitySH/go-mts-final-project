@@ -2,8 +2,10 @@ package producer
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
-	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
 )
 
 type KafkaProducer struct {
@@ -25,15 +27,21 @@ func NewProducer(cfg KafkaConfig) *KafkaProducer {
 	return &KafkaProducer{w: w}
 }
 
-func (p *KafkaProducer) ProduceMessage(ctx context.Context, msg entity.QMessage) error {
-	err := p.w.WriteMessages(ctx,
-		kafka.Message{
-			Key:   []byte(msg.Key),
-			Value: msg.Value,
-		},
-	)
+func (p *KafkaProducer) ProduceJSONMessage(ctx context.Context, data any) error {
+	payload, err := json.Marshal(&data)
+	if err != nil {
+		return fmt.Errorf("can't marshal data: %w", err)
+	}
 
-	return err
+	err = p.w.WriteMessages(ctx, kafka.Message{
+		Key:   []byte(uuid.New().String()),
+		Value: payload,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *KafkaProducer) Close() error {

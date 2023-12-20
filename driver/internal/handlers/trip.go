@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/segmentio/kafka-go"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/messages"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
-	"time"
 )
 
 type messageType string
@@ -19,18 +19,6 @@ const (
 var (
 	ErrUnknownMessageType = errors.New("unknown message type")
 )
-
-type CreatedTripEvent struct {
-	Id              string    `json:"id"`
-	Source          string    `json:"source"`
-	Type            string    `json:"type"`
-	Datacontenttype string    `json:"datacontenttype"`
-	Time            time.Time `json:"time"`
-	Data            struct {
-		TripId  string `json:"trip_id"`
-		OfferId string `json:"offer_id"`
-	} `json:"data"`
-}
 
 type TripHandler struct {
 	driverService *service.DriverService
@@ -63,7 +51,7 @@ func (c *TripHandler) Handle(ctx context.Context, m kafka.Message) error {
 }
 
 func (c *TripHandler) handleCreatedTripEvent(ctx context.Context, m kafka.Message) error {
-	var event CreatedTripEvent
+	var event messages.CreatedTripEvent
 
 	err := json.Unmarshal(m.Value, &event)
 	if err != nil {
