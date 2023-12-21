@@ -8,6 +8,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/messages"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/tracy"
 )
 
 type messageType string
@@ -51,11 +52,15 @@ func (c *TripHandler) Handle(ctx context.Context, m kafka.Message) error {
 }
 
 func (c *TripHandler) handleCreatedTripEvent(ctx context.Context, m kafka.Message) error {
-	var event messages.CreatedTripEvent
+	ctx, span := tracy.Start(ctx)
+	defer span.End()
 
+	var event messages.CreatedTripEvent
 	err := json.Unmarshal(m.Value, &event)
 	if err != nil {
-		return fmt.Errorf("can't unmarshal event: %w", err)
+		err = fmt.Errorf("can't unmarshal event: %w", err)
+		tracy.RecordError(ctx, err)
+		return err
 	}
 
 	err = c.driverService.OfferTripForDrivers(ctx, event.Data.OfferId)

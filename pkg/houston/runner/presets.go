@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/prometrics"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/tracy"
 )
@@ -47,8 +46,6 @@ func NewRunnerV1(appName, jaegerAddr string, opts ...RunnerV1Option) *RunnerV1 {
 }
 
 func (r *RunnerV1) Run(ctx context.Context) error {
-	loggy.InitDefault()
-
 	var err error
 	r.shutdownTracer, err = tracy.Init(ctx, r.jaegerAddr, r.appName)
 	if err != nil {

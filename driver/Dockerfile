@@ -12,6 +12,7 @@ RUN go mod download
 COPY driver/cmd cmd
 COPY driver/api api
 COPY driver/pkg pkg
+COPY driver/env.dev env.dev
 COPY driver/internal internal
 
 ENV CGO_ENABLED=0

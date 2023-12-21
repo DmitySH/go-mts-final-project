@@ -12,6 +12,7 @@ RUN go mod download
 COPY location/cmd cmd
 COPY location/api api
 COPY location/pkg pkg
+COPY location/env.dev env.dev
 COPY location/internal internal
 
 ENV CGO_ENABLED=0
