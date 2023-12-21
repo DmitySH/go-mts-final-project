@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
 )
 
@@ -10,6 +11,11 @@ type DriverConfig struct {
 }
 
 type DriverRepository interface {
+	GetTrips(ctx context.Context) ([]entity.Trip, error)
+	GetTripByID(ctx context.Context, tripID string) (entity.Trip, error)
+	UpdateTripStatus(ctx context.Context, tripID string, tripStatus entity.TripStatus) error
+	UpdateTripDriver(ctx context.Context, tripID string, driverId string) error
+	CreateTrip(ctx context.Context, trip entity.Trip) error
 }
 
 type DriverProducer interface {

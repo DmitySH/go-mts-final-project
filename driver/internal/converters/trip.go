@@ -44,3 +44,43 @@ func tripStatusFromProto(status driver.TripStatus) entity.TripStatus {
 		return entity.TripStatusUnknown
 	}
 }
+
+func TripFromEntity(trip entity.Trip) *driver.Trip {
+	return &driver.Trip{
+		Id:       trip.Id,
+		DriverId: trip.DriverId,
+		From:     latLngFromEntity(trip.From),
+		To:       latLngFromEntity(trip.To),
+		Price: &driver.Money{
+			Amount:   trip.Price.Amount,
+			Currency: trip.Price.Currency,
+		},
+		Status: tripStatusFromEntity(trip.Status),
+	}
+}
+
+func latLngFromEntity(latLng entity.LatLng) *driver.LatLngLiteral {
+	return &driver.LatLngLiteral{
+		Lat: latLng.Lat,
+		Lng: latLng.Lng,
+	}
+}
+
+func tripStatusFromEntity(status entity.TripStatus) driver.TripStatus {
+	switch status {
+	case entity.TripStatusDriverSearch:
+		return driver.TripStatus_DRIVER_SEARCH
+	case entity.TripStatusDriverFound:
+		return driver.TripStatus_DRIVER_FOUND
+	case entity.TripStatusOnPosition:
+		return driver.TripStatus_ON_POSITION
+	case entity.TripStatusStarted:
+		return driver.TripStatus_STARTED
+	case entity.TripStatusEnded:
+		return driver.TripStatus_ENDED
+	case entity.TripStatusCanceled:
+		return driver.TripStatus_CANCELED
+	default:
+		return driver.TripStatus_UNKNOWN
+	}
+}

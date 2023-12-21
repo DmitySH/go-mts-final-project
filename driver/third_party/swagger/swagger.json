@@ -138,6 +138,36 @@
         ]
       }
     },
+    "/trips/{trip_id}/end": {
+      "post": {
+        "operationId": "Driver_EndTrip",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/driverEndTripResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Driver"
+        ]
+      }
+    },
     "/trips/{trip_id}/start": {
       "post": {
         "operationId": "Driver_StartTrip",
@@ -145,7 +175,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/driverAcceptTripResponse"
+              "$ref": "#/definitions/driverStartTripResponse"
             }
           },
           "default": {
@@ -174,6 +204,9 @@
       "type": "object"
     },
     "driverCancelTripResponse": {
+      "type": "object"
+    },
+    "driverEndTripResponse": {
       "type": "object"
     },
     "driverGetTripByIDResponse": {
@@ -207,6 +240,9 @@
           "type": "string"
         }
       }
+    },
+    "driverStartTripResponse": {
+      "type": "object"
     },
     "driverTrip": {
       "type": "object",

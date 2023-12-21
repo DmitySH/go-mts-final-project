@@ -33,9 +33,14 @@ service Driver {
     };
   }
 
-  rpc StartTrip(AcceptTripRequest) returns (AcceptTripResponse) {
+  rpc StartTrip(StartTripRequest) returns (StartTripResponse) {
     option (google.api.http) = {
       post: "/trips/{trip_id}/start"
+    };
+  }
+  rpc EndTrip(EndTripRequest) returns (EndTripResponse) {
+    option (google.api.http) = {
+      post: "/trips/{trip_id}/end"
     };
   }
 }
@@ -72,6 +77,12 @@ message StartTripRequest {
 }
 
 message StartTripResponse {}
+
+message EndTripRequest {
+  string trip_id = 1;
+}
+
+message EndTripResponse {}
 
 enum TripStatus {
   UNKNOWN = 0;

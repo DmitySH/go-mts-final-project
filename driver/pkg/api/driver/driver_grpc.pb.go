@@ -26,7 +26,8 @@ type DriverClient interface {
 	GetTripByID(ctx context.Context, in *GetTripByIDRequest, opts ...grpc.CallOption) (*GetTripByIDResponse, error)
 	CancelTrip(ctx context.Context, in *CancelTripRequest, opts ...grpc.CallOption) (*CancelTripResponse, error)
 	AcceptTrip(ctx context.Context, in *AcceptTripRequest, opts ...grpc.CallOption) (*AcceptTripResponse, error)
-	StartTrip(ctx context.Context, in *AcceptTripRequest, opts ...grpc.CallOption) (*AcceptTripResponse, error)
+	StartTrip(ctx context.Context, in *StartTripRequest, opts ...grpc.CallOption) (*StartTripResponse, error)
+	EndTrip(ctx context.Context, in *EndTripRequest, opts ...grpc.CallOption) (*EndTripResponse, error)
 }
 
 type driverClient struct {
@@ -73,9 +74,18 @@ func (c *driverClient) AcceptTrip(ctx context.Context, in *AcceptTripRequest, op
 	return out, nil
 }
 
-func (c *driverClient) StartTrip(ctx context.Context, in *AcceptTripRequest, opts ...grpc.CallOption) (*AcceptTripResponse, error) {
-	out := new(AcceptTripResponse)
+func (c *driverClient) StartTrip(ctx context.Context, in *StartTripRequest, opts ...grpc.CallOption) (*StartTripResponse, error) {
+	out := new(StartTripResponse)
 	err := c.cc.Invoke(ctx, "/taxi.driver.Driver/StartTrip", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverClient) EndTrip(ctx context.Context, in *EndTripRequest, opts ...grpc.CallOption) (*EndTripResponse, error) {
+	out := new(EndTripResponse)
+	err := c.cc.Invoke(ctx, "/taxi.driver.Driver/EndTrip", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +100,8 @@ type DriverServer interface {
 	GetTripByID(context.Context, *GetTripByIDRequest) (*GetTripByIDResponse, error)
 	CancelTrip(context.Context, *CancelTripRequest) (*CancelTripResponse, error)
 	AcceptTrip(context.Context, *AcceptTripRequest) (*AcceptTripResponse, error)
-	StartTrip(context.Context, *AcceptTripRequest) (*AcceptTripResponse, error)
+	StartTrip(context.Context, *StartTripRequest) (*StartTripResponse, error)
+	EndTrip(context.Context, *EndTripRequest) (*EndTripResponse, error)
 	mustEmbedUnimplementedDriverServer()
 }
 
@@ -110,8 +121,11 @@ func (UnimplementedDriverServer) CancelTrip(context.Context, *CancelTripRequest)
 func (UnimplementedDriverServer) AcceptTrip(context.Context, *AcceptTripRequest) (*AcceptTripResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AcceptTrip not implemented")
 }
-func (UnimplementedDriverServer) StartTrip(context.Context, *AcceptTripRequest) (*AcceptTripResponse, error) {
+func (UnimplementedDriverServer) StartTrip(context.Context, *StartTripRequest) (*StartTripResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartTrip not implemented")
+}
+func (UnimplementedDriverServer) EndTrip(context.Context, *EndTripRequest) (*EndTripResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EndTrip not implemented")
 }
 func (UnimplementedDriverServer) mustEmbedUnimplementedDriverServer() {}
 
@@ -199,7 +213,7 @@ func _Driver_AcceptTrip_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _Driver_StartTrip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AcceptTripRequest)
+	in := new(StartTripRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -211,7 +225,25 @@ func _Driver_StartTrip_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/taxi.driver.Driver/StartTrip",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverServer).StartTrip(ctx, req.(*AcceptTripRequest))
+		return srv.(DriverServer).StartTrip(ctx, req.(*StartTripRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Driver_EndTrip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EndTripRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServer).EndTrip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/taxi.driver.Driver/EndTrip",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServer).EndTrip(ctx, req.(*EndTripRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -242,6 +274,10 @@ var Driver_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StartTrip",
 			Handler:    _Driver_StartTrip_Handler,
+		},
+		{
+			MethodName: "EndTrip",
+			Handler:    _Driver_EndTrip_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

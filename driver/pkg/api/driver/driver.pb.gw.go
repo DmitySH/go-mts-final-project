@@ -224,7 +224,7 @@ func local_request_Driver_AcceptTrip_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func request_Driver_StartTrip_0(ctx context.Context, marshaler runtime.Marshaler, client DriverClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AcceptTripRequest
+	var protoReq StartTripRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -250,7 +250,7 @@ func request_Driver_StartTrip_0(ctx context.Context, marshaler runtime.Marshaler
 }
 
 func local_request_Driver_StartTrip_0(ctx context.Context, marshaler runtime.Marshaler, server DriverServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AcceptTripRequest
+	var protoReq StartTripRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -271,6 +271,58 @@ func local_request_Driver_StartTrip_0(ctx context.Context, marshaler runtime.Mar
 	}
 
 	msg, err := server.StartTrip(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Driver_EndTrip_0(ctx context.Context, marshaler runtime.Marshaler, client DriverClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq EndTripRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["trip_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "trip_id")
+	}
+
+	protoReq.TripId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "trip_id", err)
+	}
+
+	msg, err := client.EndTrip(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Driver_EndTrip_0(ctx context.Context, marshaler runtime.Marshaler, server DriverServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq EndTripRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["trip_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "trip_id")
+	}
+
+	protoReq.TripId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "trip_id", err)
+	}
+
+	msg, err := server.EndTrip(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -403,6 +455,31 @@ func RegisterDriverHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		}
 
 		forward_Driver_StartTrip_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Driver_EndTrip_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/taxi.driver.Driver/EndTrip", runtime.WithHTTPPathPattern("/trips/{trip_id}/end"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Driver_EndTrip_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Driver_EndTrip_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -557,6 +634,28 @@ func RegisterDriverHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
+	mux.Handle("POST", pattern_Driver_EndTrip_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/taxi.driver.Driver/EndTrip", runtime.WithHTTPPathPattern("/trips/{trip_id}/end"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Driver_EndTrip_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Driver_EndTrip_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -588,6 +687,8 @@ var (
 	pattern_Driver_AcceptTrip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"trips", "trip_id", "accept"}, ""))
 
 	pattern_Driver_StartTrip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"trips", "trip_id", "start"}, ""))
+
+	pattern_Driver_EndTrip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"trips", "trip_id", "end"}, ""))
 )
 
 var (
@@ -600,4 +701,6 @@ var (
 	forward_Driver_AcceptTrip_0 = runtime.ForwardResponseMessage
 
 	forward_Driver_StartTrip_0 = runtime.ForwardResponseMessage
+
+	forward_Driver_EndTrip_0 = runtime.ForwardResponseMessage
 )
