@@ -13,7 +13,7 @@ services:
       - 8481:84
       - 8081:80
     env_file:
-      - driver/dev.env
+      - driver/env.dev
 
   location:
     container_name: location-service
@@ -29,7 +29,7 @@ services:
       - 8482:84
       - 8082:80
     env_file:
-      - location/dev.env
+      - location/env.dev
 
   location-postgres:
     image: postgres:16.0
