@@ -9,7 +9,8 @@ type AcceptedTripCommand struct {
 	Datacontenttype string    `json:"datacontenttype"`
 	Time            time.Time `json:"time"`
 	Data            struct {
-		TripId string `json:"trip_id"`
+		TripId   string `json:"trip_id"`
+		DriverId string `json:"driver_id"`
 	} `json:"data"`
 }
 

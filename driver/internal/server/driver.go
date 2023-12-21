@@ -2,11 +2,15 @@ package server
 
 import (
 	"context"
-	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
-	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
+
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/pkg/api/driver"
 )
+
+const userID = "user_id"
 
 type DriverServer struct {
 	driver.UnimplementedDriverServer

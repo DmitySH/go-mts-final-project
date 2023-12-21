@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
@@ -17,11 +18,24 @@ func (d *DriverServer) AcceptTrip(ctx context.Context, req *driver.AcceptTripReq
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "can't get metadata")
+	}
+	userIDS := md.Get(userID)
+	if len(userIDS) != 1 {
+		return nil, status.Error(codes.InvalidArgument, "can't get user_id from metadata")
+	}
+
+	if _, err := uuid.Parse(userIDS[0]); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id format")
+	}
+
 	if _, err := uuid.Parse(req.GetTripId()); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid trip id format")
 	}
 
-	err := d.driverService.AcceptTrip(ctx, req.GetTripId())
+	err := d.driverService.AcceptTrip(ctx, req.GetTripId(), userIDS[0])
 	if err != nil {
 		if errors.Is(err, service.ErrEntityNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -35,11 +49,24 @@ func (d *DriverServer) StartTrip(ctx context.Context, req *driver.StartTripReque
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "can't get metadata")
+	}
+	userIDS := md.Get(userID)
+	if len(userIDS) != 1 {
+		return nil, status.Error(codes.InvalidArgument, "can't get user_id from metadata")
+	}
+
+	if _, err := uuid.Parse(userIDS[0]); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id format")
+	}
+
 	if _, err := uuid.Parse(req.GetTripId()); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid trip id format")
 	}
 
-	err := d.driverService.StartTrip(ctx, req.GetTripId())
+	err := d.driverService.StartTrip(ctx, req.GetTripId(), userIDS[0])
 	if err != nil {
 		if errors.Is(err, service.ErrEntityNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -54,11 +81,24 @@ func (d *DriverServer) CancelTrip(ctx context.Context, req *driver.CancelTripReq
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "can't get metadata")
+	}
+	userIDS := md.Get(userID)
+	if len(userIDS) != 1 {
+		return nil, status.Error(codes.InvalidArgument, "can't get user_id from metadata")
+	}
+
+	if _, err := uuid.Parse(userIDS[0]); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id format")
+	}
+
 	if _, err := uuid.Parse(req.GetTripId()); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid trip id format")
 	}
 
-	err := d.driverService.CancelTrip(ctx, req.GetTripId())
+	err := d.driverService.CancelTrip(ctx, req.GetTripId(), userIDS[0])
 	if err != nil {
 		if errors.Is(err, service.ErrEntityNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -73,11 +113,24 @@ func (d *DriverServer) EndTrip(ctx context.Context, req *driver.EndTripRequest) 
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "can't get metadata")
+	}
+	userIDS := md.Get(userID)
+	if len(userIDS) != 1 {
+		return nil, status.Error(codes.InvalidArgument, "can't get user_id from metadata")
+	}
+
+	if _, err := uuid.Parse(userIDS[0]); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id format")
+	}
+
 	if _, err := uuid.Parse(req.GetTripId()); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid trip id format")
 	}
 
-	err := d.driverService.EndTrip(ctx, req.GetTripId())
+	err := d.driverService.EndTrip(ctx, req.GetTripId(), userIDS[0])
 	if err != nil {
 		if errors.Is(err, service.ErrEntityNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())

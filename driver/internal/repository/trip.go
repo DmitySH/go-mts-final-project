@@ -66,11 +66,11 @@ func (d *DriverRepository) GetTripByID(ctx context.Context, tripID string) (enti
 	return trips[0], nil
 }
 
-func (d *DriverRepository) UpdateTripStatus(ctx context.Context, tripID string, tripStatus entity.TripStatus) error {
+func (d *DriverRepository) UpdateTripStatus(ctx context.Context, tripID, driverID string, tripStatus entity.TripStatus) error {
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
-	result, err := d.tripsColl.UpdateOne(ctx, bson.M{"id": tripID}, bson.M{"$set": bson.M{"status": tripStatus}})
+	result, err := d.tripsColl.UpdateOne(ctx, bson.M{"id": tripID, "driver_id": driverID}, bson.M{"$set": bson.M{"status": tripStatus}})
 	if err != nil {
 		return executeError(ctx, err)
 	}

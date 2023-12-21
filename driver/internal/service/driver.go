@@ -13,8 +13,8 @@ type DriverConfig struct {
 type DriverRepository interface {
 	GetTrips(ctx context.Context) ([]entity.Trip, error)
 	GetTripByID(ctx context.Context, tripID string) (entity.Trip, error)
-	UpdateTripStatus(ctx context.Context, tripID string, tripStatus entity.TripStatus) error
-	UpdateTripDriver(ctx context.Context, tripID string, driverId string) error
+	UpdateTripStatus(ctx context.Context, tripID, driverID string, tripStatus entity.TripStatus) error
+	UpdateTripDriver(ctx context.Context, tripID string, driverID string) error
 	CreateTrip(ctx context.Context, trip entity.Trip) error
 }
 

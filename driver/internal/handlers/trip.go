@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/segmentio/kafka-go"
+
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/messages"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/service"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/tracy"
@@ -63,7 +65,7 @@ func (c *TripHandler) handleCreatedTripEvent(ctx context.Context, m kafka.Messag
 		return err
 	}
 
-	err = c.driverService.OfferTripForDrivers(ctx, event.Data.OfferId)
+	err = c.driverService.OfferTripForDrivers(ctx, event.Data.OfferId, event.Data.TripId)
 	if err != nil {
 		return fmt.Errorf("can't offer trip: %w", err)
 	}
