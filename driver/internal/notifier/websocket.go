@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/driver/internal/entity"
 	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/loggy"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/tracy"
 	"net/http"
 	"sync"
 )
@@ -33,6 +34,9 @@ func NewWSNotifier() *WSNotifier {
 }
 
 func (w *WSNotifier) TripsHandler(rw http.ResponseWriter, r *http.Request) {
+	_, span := tracy.Start(r.Context())
+	defer span.End()
+
 	driverID := r.Header.Get(driverIDHeader)
 	if driverID == "" {
 		rw.WriteHeader(http.StatusBadRequest)
@@ -66,7 +70,10 @@ func (w *WSNotifier) TripsHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (w *WSNotifier) NotifyDriver(_ context.Context, driverID string, offer entity.Offer) error {
+func (w *WSNotifier) NotifyDriver(ctx context.Context, driverID string, offer entity.Offer) error {
+	ctx, span := tracy.Start(ctx)
+	defer span.End()
+
 	w.clientsMu.Lock()
 	driverClient, ok := w.clients[driverID]
 	w.clientsMu.Unlock()

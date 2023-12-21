@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
+	"gitlab.com/hse-mts-go-dashagarov/go-taxi/pkg/houston/tracy"
 )
 
 type KafkaProducer struct {
@@ -28,9 +29,14 @@ func NewProducer(cfg KafkaConfig) *KafkaProducer {
 }
 
 func (p *KafkaProducer) ProduceJSONMessage(ctx context.Context, data any) error {
+	ctx, span := tracy.Start(ctx)
+	defer span.End()
+
 	payload, err := json.Marshal(&data)
 	if err != nil {
-		return fmt.Errorf("can't marshal data: %w", err)
+		err = fmt.Errorf("can't marshal data: %w", err)
+		tracy.RecordError(ctx, err)
+		return err
 	}
 
 	err = p.w.WriteMessages(ctx, kafka.Message{
@@ -38,6 +44,7 @@ func (p *KafkaProducer) ProduceJSONMessage(ctx context.Context, data any) error 
 		Value: payload,
 	})
 	if err != nil {
+		tracy.RecordError(ctx, err)
 		return err
 	}
 
