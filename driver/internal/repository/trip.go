@@ -86,7 +86,7 @@ func (d *DriverRepository) UpdateTripDriver(ctx context.Context, tripID string, 
 	ctx, span := tracy.Start(ctx)
 	defer span.End()
 
-	result, err := d.tripsColl.UpdateOne(ctx, bson.M{"id": tripID, "driver_id": bson.M{"$exist": false}}, bson.M{"$set": bson.M{"driver_id": driverID}})
+	result, err := d.tripsColl.UpdateOne(ctx, bson.M{"id": tripID, "driver_id": bson.M{"$exists": false}}, bson.M{"$set": bson.M{"driver_id": driverID}})
 	if err != nil {
 		return executeError(ctx, err)
 	}
