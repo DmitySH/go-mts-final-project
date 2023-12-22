@@ -103,7 +103,7 @@ func (d *DriverRepository) CreateTrip(ctx context.Context, trip entity.Trip) err
 	defer span.End()
 
 	opts := options.Update().SetUpsert(true)
-	result, err := d.tripsColl.UpdateOne(ctx, bson.M{"id": trip.Id}, trip, opts)
+	result, err := d.tripsColl.UpdateOne(ctx, bson.M{"id": trip.Id}, bson.M{"$set": trip}, opts)
 	if err != nil {
 		return executeError(ctx, err)
 	}
