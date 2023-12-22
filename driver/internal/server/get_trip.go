@@ -43,7 +43,7 @@ func (d *DriverServer) GetTripByID(ctx context.Context, req *driver.GetTripByIDR
 		if errors.Is(err, service.ErrEntityNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		return nil, status.Errorf(codes.Internal, "can't get trip: %w", err)
+		return nil, status.Errorf(codes.Internal, "can't get trip: %v", err)
 	}
 
 	return &driver.GetTripByIDResponse{
