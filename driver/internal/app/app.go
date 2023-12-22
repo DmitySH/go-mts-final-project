@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 )
 
 const (
@@ -158,6 +159,13 @@ func (a *App) runHTTPServer(ctx context.Context, wsNotifier *notifier.WSNotifier
 				DiscardUnknown: true,
 			},
 		},
+	}), runtime.WithIncomingHeaderMatcher(func(key string) (string, bool) {
+		switch strings.ToLower(key) {
+		case "user_id":
+			return key, true
+		}
+
+		return runtime.DefaultHeaderMatcher(key)
 	}))
 
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}

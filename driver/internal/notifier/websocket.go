@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	driverIDHeader = "user-id"
+	driverIDHeader = "user_id"
 )
 
 var upgrader = websocket.Upgrader{
@@ -40,7 +40,7 @@ func (w *WSNotifier) TripsHandler(rw http.ResponseWriter, r *http.Request) {
 	driverID := r.Header.Get(driverIDHeader)
 	if driverID == "" {
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(rw, "user-id header is no set")
+		fmt.Fprint(rw, "user_id header is not set")
 		return
 	}
 
