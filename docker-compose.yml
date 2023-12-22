@@ -234,6 +234,24 @@ services:
     volumes:
       - driver_mongo_data:/data/db
 
+  init-kafka:
+    image: confluentinc/cp-kafka:7.4.3
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:29092 --list
+      
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka-1:9092,kafka-2:9092,kafka-3:9092 --create --if-not-exists --topic driver-out --replication-factor 1 --partitions 1
+      
+      echo -e 'Successfully created the following topics:'
+      "
+
 volumes:
   prometheus_data:
   location_postgres_data:
