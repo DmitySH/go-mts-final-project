@@ -36,7 +36,7 @@ func (d *DriverRepository) GetTrips(ctx context.Context) ([]entity.Trip, error) 
 	defer cursor.Close(ctx)
 
 	var trips []entity.Trip
-	if err := cursor.All(ctx, trips); err != nil {
+	if err := cursor.All(ctx, &trips); err != nil {
 		return nil, executeError(ctx, err)
 	}
 
@@ -55,7 +55,7 @@ func (d *DriverRepository) GetTripByID(ctx context.Context, tripID string) (enti
 	defer cursor.Close(ctx)
 
 	var trips []entity.Trip
-	if err := cursor.All(ctx, trips); err != nil {
+	if err := cursor.All(ctx, &trips); err != nil {
 		return entity.Trip{}, executeError(ctx, err)
 	}
 
