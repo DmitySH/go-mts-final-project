@@ -43,7 +43,7 @@ func (d *DriverServer) AcceptTrip(ctx context.Context, req *driver.AcceptTripReq
 		}
 
 		loggy.Errorln(err)
-		return nil, status.Errorf(codes.Internal, "can't accept trip: %w", err)
+		return nil, status.Errorf(codes.Internal, "can't accept trip: %v", err)
 	}
 
 	return &driver.AcceptTripResponse{}, nil
@@ -76,7 +76,7 @@ func (d *DriverServer) StartTrip(ctx context.Context, req *driver.StartTripReque
 		}
 
 		loggy.Errorln(err)
-		return nil, status.Errorf(codes.Internal, "can't start trip: %w", err)
+		return nil, status.Errorf(codes.Internal, "can't start trip: %v", err)
 	}
 
 	return &driver.StartTripResponse{}, nil
@@ -110,7 +110,7 @@ func (d *DriverServer) CancelTrip(ctx context.Context, req *driver.CancelTripReq
 		}
 
 		loggy.Errorln(err)
-		return nil, status.Errorf(codes.Internal, "can't cancel trip: %w", err)
+		return nil, status.Errorf(codes.Internal, "can't cancel trip: %v", err)
 	}
 
 	return &driver.CancelTripResponse{}, nil
@@ -144,7 +144,7 @@ func (d *DriverServer) EndTrip(ctx context.Context, req *driver.EndTripRequest) 
 		}
 
 		loggy.Errorln(err)
-		return nil, status.Errorf(codes.Internal, "can't end trip: %w", err)
+		return nil, status.Errorf(codes.Internal, "can't end trip: %v", err)
 	}
 
 	return &driver.EndTripResponse{}, nil
